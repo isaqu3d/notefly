@@ -8,9 +8,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "scripts": {
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@notely/tsconfig": "workspace:*",
+    "@types/node": "^22.10.5",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
   }
