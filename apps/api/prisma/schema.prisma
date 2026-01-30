@@ -1,0 +1,184 @@
+// This is your Prisma schema file for Notely
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Authentication Models
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
+  members         WorkspaceMember[]
+  pages           Page[]
+  refreshTokens   RefreshToken[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ============================================
+// Workspace Models
+// ============================================
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  icon      String?
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner   User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members WorkspaceMember[]
+  pages   Page[]
+
+  @@index([ownerId])
+  @@map("workspaces")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+// ============================================
+// Page Models
+// ============================================
+
+enum PageVisibility {
+  PRIVATE
+  WORKSPACE
+  PUBLIC
+}
+
+model Page {
+  id          String         @id @default(uuid())
+  title       String         @default("Untitled")
+  icon        String?
+  coverImage  String?
+  workspaceId String
+  parentId    String?
+  authorId    String
+  visibility  PageVisibility @default(PRIVATE)
+  position    Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent    Page?     @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Page[]    @relation("PageHierarchy")
+  blocks    Block[]
+
+  @@index([workspaceId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([position])
+  @@map("pages")
+}
+
+// ============================================
+// Block Models
+// ============================================
+
+enum BlockType {
+  TEXT
+  HEADING_1
+  HEADING_2
+  HEADING_3
+  BULLET_LIST
+  NUMBERED_LIST
+  TODO
+  TOGGLE
+  QUOTE
+  DIVIDER
+  IMAGE
+  CODE
+  CALLOUT
+}
+
+model Block {
+  id       String    @id @default(uuid())
+  type     BlockType
+  pageId   String
+  parentId String?
+  position Int       @default(0)
+
+  // Content fields (flexible for different block types)
+  content  String?
+  checked  Boolean?
+  url      String?
+  caption  String?
+  width    Int?
+  height   Int?
+  language String?
+  icon     String?
+  color    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  page     Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parent   Block?  @relation("BlockHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Block[] @relation("BlockHierarchy")
+
+  @@index([pageId])
+  @@index([parentId])
+  @@index([position])
+  @@index([type])
+  @@map("blocks")
+}
