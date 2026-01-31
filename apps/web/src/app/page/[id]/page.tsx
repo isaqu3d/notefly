@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import { api } from '@/lib/api';
-import type { Page, Block, BlockType, Workspace } from '@/types';
 import { BlockEditor } from '@/components/editor/BlockEditor';
 import { Sidebar } from '@/components/sidebar';
-import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
+import type { Block, BlockType, Page, Workspace } from '@/types';
 import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function PageEditorPage() {
   const router = useRouter();
@@ -38,7 +37,7 @@ export default function PageEditorPage() {
 
     // Cleanup function to clear all pending timeouts
     return () => {
-      Object.values(updateTimeoutRef.current).forEach(timeout => {
+      Object.values(updateTimeoutRef.current).forEach((timeout) => {
         clearTimeout(timeout);
       });
       updateTimeoutRef.current = {};
@@ -53,7 +52,9 @@ export default function PageEditorPage() {
 
       // Load workspace info
       if (data.workspaceId) {
-        const workspaceData = await api.get<Workspace>(`/workspaces/${data.workspaceId}`);
+        const workspaceData = await api.get<Workspace>(
+          `/workspaces/${data.workspaceId}`
+        );
         setWorkspace(workspaceData);
       }
     } catch (error) {
@@ -64,7 +65,9 @@ export default function PageEditorPage() {
   const loadBlocks = async () => {
     try {
       const data = await api.get<Block[]>('/blocks');
-      const pageBlocks = data.filter((b) => b.pageId === pageId && !b.parentBlockId);
+      const pageBlocks = data.filter(
+        (b) => b.pageId === pageId && !b.parentBlockId
+      );
       pageBlocks.sort((a, b) => a.position - b.position);
       setBlocks(pageBlocks);
     } catch (error) {
@@ -100,35 +103,40 @@ export default function PageEditorPage() {
     }
   };
 
-  const handleUpdateBlock = useCallback((
-    blockId: string,
-    content: string,
-    properties?: Record<string, unknown>
-  ) => {
-    // Update local state immediately for responsive UI
-    setBlocks((prev) =>
-      prev.map((b) =>
-        b.id === blockId ? { ...b, content, properties: properties || b.properties } : b
-      )
-    );
+  const handleUpdateBlock = useCallback(
+    (
+      blockId: string,
+      content: string,
+      properties?: Record<string, unknown>
+    ) => {
+      // Update local state immediately for responsive UI
+      setBlocks((prev) =>
+        prev.map((b) =>
+          b.id === blockId
+            ? { ...b, content, properties: properties || b.properties }
+            : b
+        )
+      );
 
-    // Clear existing timeout for this block
-    if (updateTimeoutRef.current[blockId]) {
-      clearTimeout(updateTimeoutRef.current[blockId]);
-    }
-
-    // Debounce API call - only send after 1500ms of no changes
-    updateTimeoutRef.current[blockId] = setTimeout(async () => {
-      try {
-        await api.put(`/blocks/${blockId}`, { content, properties });
-        console.log('[Editor] Block updated:', blockId);
-      } catch (error) {
-        console.error('Failed to update block:', error);
-        // Optionally: show error to user or revert local state
+      // Clear existing timeout for this block
+      if (updateTimeoutRef.current[blockId]) {
+        clearTimeout(updateTimeoutRef.current[blockId]);
       }
-      delete updateTimeoutRef.current[blockId];
-    }, 1500);
-  }, []);
+
+      // Debounce API call - only send after 1500ms of no changes
+      updateTimeoutRef.current[blockId] = setTimeout(async () => {
+        try {
+          await api.put(`/blocks/${blockId}`, { content, properties });
+          console.log('[Editor] Block updated:', blockId);
+        } catch (error) {
+          console.error('Failed to update block:', error);
+          // Optionally: show error to user or revert local state
+        }
+        delete updateTimeoutRef.current[blockId];
+      }, 1500);
+    },
+    []
+  );
 
   const handleDeleteBlock = async (blockId: string) => {
     try {
@@ -139,20 +147,19 @@ export default function PageEditorPage() {
     }
   };
 
-  const handleCreateBlock = async (type: BlockType = 'TEXT', afterBlockId?: string) => {
+  const handleCreateBlock = async (
+    type: BlockType = 'TEXT',
+    afterBlockId?: string
+  ) => {
     try {
-      // Check if we're trying to create a block after an empty block
       if (afterBlockId) {
         const currentBlock = blocks.find((b) => b.id === afterBlockId);
 
-        // If current block is empty, don't create a new one
-        // Just focus the next block if it exists
         if (currentBlock && !currentBlock.content.trim()) {
-          const currentIndex = blocks.findIndex((b) => b.id === afterBlockId);
-          if (currentIndex < blocks.length - 1) {
-            // There's already a next block, don't create new one
-            return;
-          }
+          console.log(
+            '[Editor] Prevented: current block is empty, not creating another'
+          );
+          return;
         }
       }
 
@@ -168,23 +175,28 @@ export default function PageEditorPage() {
         position,
       });
 
-      setBlocks((prev) => [...prev, newBlock].sort((a, b) => a.position - b.position));
+      setBlocks((prev) =>
+        [...prev, newBlock].sort((a, b) => a.position - b.position)
+      );
     } catch (error) {
       console.error('Failed to create block:', error);
     }
   };
 
-  const handleChangeBlockType = useCallback(async (blockId: string, newType: BlockType) => {
-    try {
-      await api.put(`/blocks/${blockId}`, { type: newType });
-      setBlocks((prev) =>
-        prev.map((b) => (b.id === blockId ? { ...b, type: newType } : b))
-      );
-      console.log('[Editor] Block type changed:', blockId, newType);
-    } catch (error) {
-      console.error('Failed to change block type:', error);
-    }
-  }, []);
+  const handleChangeBlockType = useCallback(
+    async (blockId: string, newType: BlockType) => {
+      try {
+        await api.put(`/blocks/${blockId}`, { type: newType });
+        setBlocks((prev) =>
+          prev.map((b) => (b.id === blockId ? { ...b, type: newType } : b))
+        );
+        console.log('[Editor] Block type changed:', blockId, newType);
+      } catch (error) {
+        console.error('Failed to change block type:', error);
+      }
+    },
+    []
+  );
 
   if (loading) {
     return (
@@ -208,7 +220,9 @@ export default function PageEditorPage() {
                   href={`/workspace/${workspace.id}`}
                   className="hover:text-foreground transition-colors"
                 >
-                  {workspace.icon && <span className="mr-1">{workspace.icon}</span>}
+                  {workspace.icon && (
+                    <span className="mr-1">{workspace.icon}</span>
+                  )}
                   {workspace.name}
                 </Link>
                 <ChevronRight className="h-3 w-3" />

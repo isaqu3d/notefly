@@ -1,22 +1,39 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import type { Block } from '@/types';
+import { useEffect, useRef, useState } from 'react';
 
 interface BlockEditorProps {
   block: Block;
-  onUpdate: (blockId: string, content: string, properties?: Record<string, unknown>) => void;
+  onUpdate: (
+    blockId: string,
+    content: string,
+    properties?: Record<string, unknown>
+  ) => void;
   onDelete: (blockId: string) => void;
   onNewBlock: (afterBlockId: string) => void;
   onChangeType?: (blockId: string, newType: Block['type']) => void;
+  onDuplicate?: (blockId: string) => void;
 }
 
-export function BlockEditor({ block, onUpdate, onDelete, onNewBlock, onChangeType }: BlockEditorProps) {
+export function BlockEditor({
+  block,
+  onUpdate,
+  onDelete,
+  onNewBlock,
+  onChangeType,
+  onDuplicate,
+}: BlockEditorProps) {
   const [content, setContent] = useState(block.content);
-  const [isChecked, setIsChecked] = useState(block.properties?.checked === true);
+  const [isChecked, setIsChecked] = useState(
+    block.properties?.checked === true
+  );
   const [showCommandMenu, setShowCommandMenu] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
+  const menuItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setContent(block.content);
@@ -30,26 +47,52 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock, onChangeTyp
     }
   }, [block.type, block.id]);
 
+  // Auto-scroll menu item into view when navigating with keyboard
+  useEffect(() => {
+    if (showCommandMenu && menuItemRefs.current[selectedCommandIndex]) {
+      menuItemRefs.current[selectedCommandIndex]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [selectedCommandIndex, showCommandMenu]);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowContextMenu(false);
+      }
+    };
+
+    if (showContextMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =>
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showContextMenu]);
+
   const handleContentChange = (value: string) => {
     // Check if user typed "/" at the start of an empty TEXT block
     if (value === '/' && block.type === 'TEXT' && content === '') {
       setShowCommandMenu(true);
       setSelectedCommandIndex(0); // Reset selection
       setContent('/');
-      return; // Don't call onUpdate for just "/"
+      return;
     }
 
     // If menu is open and user continues typing
     if (showCommandMenu && value.length > 1) {
       setShowCommandMenu(false);
-      // Remove the "/" prefix
       const cleanValue = value.startsWith('/') ? value.slice(1) : value;
       setContent(cleanValue);
       onUpdate(block.id, cleanValue);
       return;
     }
 
-    // If user deletes back to empty while menu is open
     if (showCommandMenu && value === '') {
       setShowCommandMenu(false);
       setContent('');
@@ -84,17 +127,14 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock, onChangeTyp
       e.preventDefault();
 
       if (showCommandMenu) {
-        // Select the highlighted command
         const selectedCommand = commandOptions[selectedCommandIndex];
         handleSelectCommand(selectedCommand.type);
       } else {
-        // Create new block below current one
         onNewBlock(block.id);
       }
       return;
     }
 
-    // Handle Backspace on empty block
     if (e.key === 'Backspace' && (content === '' || content === '/')) {
       e.preventDefault();
 
@@ -206,7 +246,9 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock, onChangeTyp
       case 'NUMBERED_LIST':
         return (
           <div className="flex items-start gap-2 py-0.5">
-            <span className="mt-0.5 text-muted-foreground text-sm">{block.position + 1}.</span>
+            <span className="mt-0.5 text-muted-foreground text-sm">
+              {block.position + 1}.
+            </span>
             <input
               ref={inputRef as React.RefObject<HTMLInputElement>}
               type="text"
@@ -269,7 +311,11 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock, onChangeTyp
         return (
           <div className="space-y-2 py-1">
             {content ? (
-              <img src={content} alt="Block image" className="max-w-full rounded" />
+              <img
+                src={content}
+                alt="Block image"
+                className="max-w-full rounded"
+              />
             ) : (
               <div className="p-8 border-2 border-dashed border-border rounded text-center">
                 <p className="text-muted-foreground text-sm">Image URL</p>
@@ -322,20 +368,130 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock, onChangeTyp
       setShowCommandMenu(false);
       setContent('');
       onChangeType(block.id, type);
-      // Focus will happen automatically via useEffect after type changes
+    }
+  };
+
+  const handleDeleteBlock = () => {
+    setShowContextMenu(false);
+    onDelete(block.id);
+  };
+
+  const handleDuplicateBlock = () => {
+    setShowContextMenu(false);
+    if (onDuplicate) {
+      onDuplicate(block.id);
     }
   };
 
   return (
-    <div className="group relative py-0.5">
-      {renderBlock()}
+    <div className="group relative py-0.5 flex items-start gap-1">
+      {/* Drag handle and context menu trigger */}
+      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity -ml-14 pt-0.5">
+        <button
+          onClick={() => setShowContextMenu(!showContextMenu)}
+          className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+          title="Drag to move. Click for options."
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <circle cx="4" cy="3" r="1.5" />
+            <circle cx="10" cy="3" r="1.5" />
+            <circle cx="4" cy="7" r="1.5" />
+            <circle cx="10" cy="7" r="1.5" />
+            <circle cx="4" cy="11" r="1.5" />
+            <circle cx="10" cy="11" r="1.5" />
+          </svg>
+        </button>
+        <button
+          onClick={() => setShowContextMenu(!showContextMenu)}
+          className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+          title="Click for options"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <circle cx="7" cy="2" r="1.5" />
+            <circle cx="7" cy="7" r="1.5" />
+            <circle cx="7" cy="12" r="1.5" />
+          </svg>
+        </button>
+      </div>
 
+      {/* Context Menu */}
+      {showContextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="absolute left-0 top-6 bg-popover border border-border rounded-lg shadow-lg z-50 w-48 py-1"
+        >
+          <button
+            onClick={handleDeleteBlock}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent transition-colors"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+            </svg>
+            Delete
+          </button>
+          {onDuplicate && (
+            <button
+              onClick={handleDuplicateBlock}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent transition-colors"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+              Duplicate
+            </button>
+          )}
+          {onChangeType && (
+            <>
+              <div className="border-t border-border my-1" />
+              <div className="px-3 py-1 text-xs text-muted-foreground">
+                Turn into
+              </div>
+              {commandOptions.slice(0, 6).map((option) => (
+                <button
+                  key={option.type}
+                  onClick={() => {
+                    setShowContextMenu(false);
+                    onChangeType(block.id, option.type);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-accent transition-colors"
+                >
+                  <span className="text-muted-foreground w-5 text-xs">
+                    {option.icon}
+                  </span>
+                  {option.label}
+                </button>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Block content */}
+      <div className="flex-1">{renderBlock()}</div>
+
+      {/* Slash command menu */}
       {showCommandMenu && (
         <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 w-64 max-h-64 overflow-auto notion-scrollbar">
           <div className="p-1">
             {commandOptions.map((option, index) => (
               <button
                 key={option.type}
+                ref={(el) => (menuItemRefs.current[index] = el)}
                 onClick={() => handleSelectCommand(option.type)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded text-left transition-colors ${
                   index === selectedCommandIndex
