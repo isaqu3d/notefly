@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import type { Page, Block, BlockType } from '@/types';
+import type { Page, Block, BlockType, Workspace } from '@/types';
 import { BlockEditor } from '@/components/editor/BlockEditor';
+import { Sidebar } from '@/components/sidebar';
+import { Button } from '@/components/ui/button';
+import { ChevronRight } from 'lucide-react';
 
 export default function PageEditorPage() {
   const router = useRouter();
@@ -13,12 +16,16 @@ export default function PageEditorPage() {
   const pageId = params.id as string;
 
   const [page, setPage] = useState<Page | null>(null);
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
-  const [showBlockMenu, setShowBlockMenu] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const updateTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   useEffect(() => {
+    api.refreshToken();
     const token = api.getToken();
     if (!token) {
       router.push('/auth/login');
@@ -27,6 +34,15 @@ export default function PageEditorPage() {
 
     loadPage();
     loadBlocks();
+    loadWorkspaces();
+
+    // Cleanup function to clear all pending timeouts
+    return () => {
+      Object.values(updateTimeoutRef.current).forEach(timeout => {
+        clearTimeout(timeout);
+      });
+      updateTimeoutRef.current = {};
+    };
   }, [pageId, router]);
 
   const loadPage = async () => {
@@ -34,6 +50,12 @@ export default function PageEditorPage() {
       const data = await api.get<Page>(`/pages/${pageId}`);
       setPage(data);
       setTitle(data.title);
+
+      // Load workspace info
+      if (data.workspaceId) {
+        const workspaceData = await api.get<Workspace>(`/workspaces/${data.workspaceId}`);
+        setWorkspace(workspaceData);
+      }
     } catch (error) {
       console.error('Failed to load page:', error);
     }
@@ -52,33 +74,61 @@ export default function PageEditorPage() {
     }
   };
 
+  const loadWorkspaces = async () => {
+    try {
+      const data = await api.get<Workspace[]>('/workspaces');
+      setWorkspaces(data);
+    } catch (error) {
+      console.error('Failed to load workspaces:', error);
+    }
+  };
+
   const handleTitleChange = async (newTitle: string) => {
     setTitle(newTitle);
-    if (page) {
+  };
+
+  const handleTitleBlur = async () => {
+    setIsEditingTitle(false);
+    if (page && title !== page.title) {
       try {
-        await api.put(`/pages/${page.id}`, { title: newTitle });
+        await api.put(`/pages/${page.id}`, { title });
+        setPage({ ...page, title });
       } catch (error) {
         console.error('Failed to update title:', error);
+        setTitle(page.title);
       }
     }
   };
 
-  const handleUpdateBlock = async (
+  const handleUpdateBlock = useCallback((
     blockId: string,
     content: string,
     properties?: Record<string, unknown>
   ) => {
-    try {
-      await api.put(`/blocks/${blockId}`, { content, properties });
-      setBlocks((prev) =>
-        prev.map((b) =>
-          b.id === blockId ? { ...b, content, properties: properties || b.properties } : b
-        )
-      );
-    } catch (error) {
-      console.error('Failed to update block:', error);
+    // Update local state immediately for responsive UI
+    setBlocks((prev) =>
+      prev.map((b) =>
+        b.id === blockId ? { ...b, content, properties: properties || b.properties } : b
+      )
+    );
+
+    // Clear existing timeout for this block
+    if (updateTimeoutRef.current[blockId]) {
+      clearTimeout(updateTimeoutRef.current[blockId]);
     }
-  };
+
+    // Debounce API call - only send after 1500ms of no changes
+    updateTimeoutRef.current[blockId] = setTimeout(async () => {
+      try {
+        await api.put(`/blocks/${blockId}`, { content, properties });
+        console.log('[Editor] Block updated:', blockId);
+      } catch (error) {
+        console.error('Failed to update block:', error);
+        // Optionally: show error to user or revert local state
+      }
+      delete updateTimeoutRef.current[blockId];
+    }, 1500);
+  }, []);
 
   const handleDeleteBlock = async (blockId: string) => {
     try {
@@ -91,6 +141,21 @@ export default function PageEditorPage() {
 
   const handleCreateBlock = async (type: BlockType = 'TEXT', afterBlockId?: string) => {
     try {
+      // Check if we're trying to create a block after an empty block
+      if (afterBlockId) {
+        const currentBlock = blocks.find((b) => b.id === afterBlockId);
+
+        // If current block is empty, don't create a new one
+        // Just focus the next block if it exists
+        if (currentBlock && !currentBlock.content.trim()) {
+          const currentIndex = blocks.findIndex((b) => b.id === afterBlockId);
+          if (currentIndex < blocks.length - 1) {
+            // There's already a next block, don't create new one
+            return;
+          }
+        }
+      }
+
       const position =
         afterBlockId !== undefined
           ? (blocks.find((b) => b.id === afterBlockId)?.position || 0) + 1
@@ -104,11 +169,22 @@ export default function PageEditorPage() {
       });
 
       setBlocks((prev) => [...prev, newBlock].sort((a, b) => a.position - b.position));
-      setShowBlockMenu(false);
     } catch (error) {
       console.error('Failed to create block:', error);
     }
   };
+
+  const handleChangeBlockType = useCallback(async (blockId: string, newType: BlockType) => {
+    try {
+      await api.put(`/blocks/${blockId}`, { type: newType });
+      setBlocks((prev) =>
+        prev.map((b) => (b.id === blockId ? { ...b, type: newType } : b))
+      );
+      console.log('[Editor] Block type changed:', blockId, newType);
+    } catch (error) {
+      console.error('Failed to change block type:', error);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -119,153 +195,101 @@ export default function PageEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/workspace/${page?.workspaceId}`}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              ← Back
-            </Link>
-            <button
-              onClick={() => setShowBlockMenu(true)}
-              className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
-              + Add Block
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="flex h-screen bg-background">
+      <Sidebar workspaces={workspaces} />
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        {page?.coverImage && (
-          <img
-            src={page.coverImage}
-            alt="Cover"
-            className="w-full h-64 object-cover rounded-lg mb-8"
-          />
-        )}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-auto notion-scrollbar">
+          <main className="max-w-4xl mx-auto px-24 py-12">
+            {/* Breadcrumb */}
+            {workspace && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-8">
+                <Link
+                  href={`/workspace/${workspace.id}`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {workspace.icon && <span className="mr-1">{workspace.icon}</span>}
+                  {workspace.name}
+                </Link>
+                <ChevronRight className="h-3 w-3" />
+                <span className="text-foreground">
+                  {page?.icon && <span className="mr-1">{page.icon}</span>}
+                  {title || 'Untitled'}
+                </span>
+              </div>
+            )}
 
-        <div className="mb-8">
-          {page?.icon && <span className="text-6xl mb-4 block">{page.icon}</span>}
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Untitled"
-            className="w-full text-5xl font-bold bg-transparent border-none outline-none placeholder-gray-300 dark:placeholder-gray-700"
-          />
-        </div>
+            {/* Cover Image */}
+            {page?.coverImage && (
+              <div className="mb-12 -mx-24">
+                <img
+                  src={page.coverImage}
+                  alt="Cover"
+                  className="w-full h-52 object-cover"
+                />
+              </div>
+            )}
 
-        <div className="space-y-2 pl-8">
-          {blocks.length === 0 ? (
-            <button
-              onClick={() => handleCreateBlock()}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              Click to add your first block...
-            </button>
-          ) : (
-            blocks.map((block) => (
-              <BlockEditor
-                key={block.id}
-                block={block}
-                onUpdate={handleUpdateBlock}
-                onDelete={handleDeleteBlock}
-                onNewBlock={() => handleCreateBlock('TEXT', block.id)}
-              />
-            ))
-          )}
-        </div>
-      </main>
+            {/* Page Icon & Title */}
+            <div className="mb-8">
+              {page?.icon && (
+                <div className="mb-4">
+                  <span className="text-6xl">{page.icon}</span>
+                </div>
+              )}
 
-      {showBlockMenu && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Add Block</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => handleCreateBlock('TEXT')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Text</div>
-                <div className="text-xs text-gray-500">Plain text</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('HEADING_1')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Heading 1</div>
-                <div className="text-xs text-gray-500">Big heading</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('HEADING_2')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Heading 2</div>
-                <div className="text-xs text-gray-500">Medium heading</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('HEADING_3')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Heading 3</div>
-                <div className="text-xs text-gray-500">Small heading</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('TODO')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">To-do</div>
-                <div className="text-xs text-gray-500">Checkbox list</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('BULLETED_LIST')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Bulleted List</div>
-                <div className="text-xs text-gray-500">Simple list</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('CODE')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Code</div>
-                <div className="text-xs text-gray-500">Code snippet</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('QUOTE')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Quote</div>
-                <div className="text-xs text-gray-500">Blockquote</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('CALLOUT')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Callout</div>
-                <div className="text-xs text-gray-500">Highlighted box</div>
-              </button>
-              <button
-                onClick={() => handleCreateBlock('DIVIDER')}
-                className="p-3 text-left border border-gray-200 dark:border-gray-800 rounded hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <div className="font-medium">Divider</div>
-                <div className="text-xs text-gray-500">Visual separator</div>
-              </button>
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  onBlur={handleTitleBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleTitleBlur();
+                    }
+                  }}
+                  placeholder="Untitled"
+                  className="w-full text-5xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/30"
+                  autoFocus
+                />
+              ) : (
+                <h1
+                  onClick={() => setIsEditingTitle(true)}
+                  className="text-5xl font-bold cursor-text hover:bg-accent/30 rounded px-2 -mx-2 transition-colors"
+                >
+                  {title || 'Untitled'}
+                </h1>
+              )}
             </div>
-            <button
-              onClick={() => setShowBlockMenu(false)}
-              className="w-full mt-4 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Cancel
-            </button>
-          </div>
+
+            {/* Blocks */}
+            <div className="space-y-1">
+              {blocks.length === 0 ? (
+                <div className="py-2">
+                  <button
+                    onClick={() => handleCreateBlock()}
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                  >
+                    Click or press 'Enter' to start writing...
+                  </button>
+                </div>
+              ) : (
+                blocks.map((block) => (
+                  <BlockEditor
+                    key={block.id}
+                    block={block}
+                    onUpdate={handleUpdateBlock}
+                    onDelete={handleDeleteBlock}
+                    onNewBlock={() => handleCreateBlock('TEXT', block.id)}
+                    onChangeType={handleChangeBlockType}
+                  />
+                ))
+              )}
+            </div>
+          </main>
         </div>
-      )}
+      </div>
     </div>
   );
 }
