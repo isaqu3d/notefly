@@ -53,7 +53,7 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
             onChange={(e) => handleContentChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Heading 1"
-            className="w-full text-4xl font-bold bg-transparent border-none outline-none"
+            className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/30 py-1"
           />
         );
 
@@ -66,7 +66,7 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
             onChange={(e) => handleContentChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Heading 2"
-            className="w-full text-3xl font-bold bg-transparent border-none outline-none"
+            className="w-full text-2xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/30 py-1"
           />
         );
 
@@ -79,18 +79,18 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
             onChange={(e) => handleContentChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Heading 3"
-            className="w-full text-2xl font-bold bg-transparent border-none outline-none"
+            className="w-full text-xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/30 py-1"
           />
         );
 
       case 'TODO':
         return (
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-2 py-0.5">
             <input
               type="checkbox"
               checked={isChecked}
               onChange={(e) => handleCheckboxChange(e.target.checked)}
-              className="mt-1 w-5 h-5"
+              className="mt-0.5 w-4 h-4 rounded border-border cursor-pointer"
             />
             <input
               ref={inputRef as React.RefObject<HTMLInputElement>}
@@ -99,8 +99,8 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
               onChange={(e) => handleContentChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="To-do"
-              className={`flex-1 bg-transparent border-none outline-none ${
-                isChecked ? 'line-through text-gray-500' : ''
+              className={`flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground/30 ${
+                isChecked ? 'line-through text-muted-foreground' : ''
               }`}
             />
           </div>
@@ -108,8 +108,8 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
 
       case 'BULLETED_LIST':
         return (
-          <div className="flex items-start gap-3">
-            <span className="mt-1">•</span>
+          <div className="flex items-start gap-2 py-0.5">
+            <span className="mt-0.5 text-muted-foreground">•</span>
             <input
               ref={inputRef as React.RefObject<HTMLInputElement>}
               type="text"
@@ -117,15 +117,15 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
               onChange={(e) => handleContentChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="List"
-              className="flex-1 bg-transparent border-none outline-none"
+              className="flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground/30"
             />
           </div>
         );
 
       case 'NUMBERED_LIST':
         return (
-          <div className="flex items-start gap-3">
-            <span className="mt-1">{block.position + 1}.</span>
+          <div className="flex items-start gap-2 py-0.5">
+            <span className="mt-0.5 text-muted-foreground text-sm">{block.position + 1}.</span>
             <input
               ref={inputRef as React.RefObject<HTMLInputElement>}
               type="text"
@@ -133,7 +133,7 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
               onChange={(e) => handleContentChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="List"
-              className="flex-1 bg-transparent border-none outline-none"
+              className="flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground/30"
             />
           </div>
         );
@@ -146,21 +146,21 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
             onChange={(e) => handleContentChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Code"
-            className="w-full p-4 bg-gray-100 dark:bg-gray-900 rounded font-mono text-sm border-none outline-none resize-none"
+            className="w-full p-3 bg-muted/50 rounded font-mono text-sm border-none outline-none resize-none placeholder:text-muted-foreground/30"
             rows={4}
           />
         );
 
       case 'QUOTE':
         return (
-          <div className="border-l-4 border-gray-300 dark:border-gray-700 pl-4">
+          <div className="border-l-3 border-border pl-4 py-0.5">
             <textarea
               ref={inputRef as React.RefObject<HTMLTextAreaElement>}
               value={content}
               onChange={(e) => handleContentChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Quote"
-              className="w-full italic bg-transparent border-none outline-none resize-none"
+              className="w-full italic bg-transparent border-none outline-none resize-none placeholder:text-muted-foreground/30"
               rows={2}
             />
           </div>
@@ -168,30 +168,30 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
 
       case 'CALLOUT':
         return (
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="p-3 bg-accent/50 rounded border border-border">
             <textarea
               ref={inputRef as React.RefObject<HTMLTextAreaElement>}
               value={content}
               onChange={(e) => handleContentChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Callout"
-              className="w-full bg-transparent border-none outline-none resize-none"
+              className="w-full bg-transparent border-none outline-none resize-none placeholder:text-muted-foreground/30"
               rows={2}
             />
           </div>
         );
 
       case 'DIVIDER':
-        return <hr className="my-4 border-gray-300 dark:border-gray-700" />;
+        return <hr className="my-3 border-border" />;
 
       case 'IMAGE':
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 py-1">
             {content ? (
-              <img src={content} alt="Block image" className="max-w-full rounded-lg" />
+              <img src={content} alt="Block image" className="max-w-full rounded" />
             ) : (
-              <div className="p-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-center">
-                <p className="text-gray-500">Image URL</p>
+              <div className="p-8 border-2 border-dashed border-border rounded text-center">
+                <p className="text-muted-foreground text-sm">Image URL</p>
               </div>
             )}
             <input
@@ -201,7 +201,7 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
               onChange={(e) => handleContentChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Enter image URL"
-              className="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-gray-700 rounded outline-none"
+              className="w-full px-3 py-2 bg-transparent border border-border rounded outline-none text-sm placeholder:text-muted-foreground/30"
             />
           </div>
         );
@@ -213,8 +213,8 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
             value={content}
             onChange={(e) => handleContentChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type something..."
-            className="w-full bg-transparent border-none outline-none resize-none"
+            placeholder="Type something or type '/' for commands..."
+            className="w-full bg-transparent border-none outline-none resize-none placeholder:text-muted-foreground/30 py-0.5"
             rows={1}
             style={{ minHeight: '24px' }}
           />
@@ -223,11 +223,11 @@ export function BlockEditor({ block, onUpdate, onDelete, onNewBlock }: BlockEdit
   };
 
   return (
-    <div className="group relative py-1">
+    <div className="group relative py-0.5">
       {renderBlock()}
       <button
         onClick={() => onDelete(block.id)}
-        className="absolute -left-8 top-2 opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500"
+        className="absolute -left-6 top-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive text-lg"
         title="Delete block"
       >
         ×
