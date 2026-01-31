@@ -20,7 +20,10 @@ export default function DashboardPage() {
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
   useEffect(() => {
+    // Refresh token from localStorage
+    api.refreshToken();
     const token = api.getToken();
+
     if (!token) {
       router.push('/auth/login');
       return;
