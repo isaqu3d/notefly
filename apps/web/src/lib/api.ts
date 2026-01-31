@@ -22,9 +22,22 @@ class ApiClient {
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+    this.initToken();
+  }
+
+  private initToken() {
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('access_token');
+      if (this.token) {
+        console.log('[API] Token loaded from localStorage');
+      } else {
+        console.warn('[API] No token found in localStorage');
+      }
     }
+  }
+
+  refreshToken() {
+    this.initToken();
   }
 
   setToken(token: string | null) {
@@ -44,7 +57,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
@@ -53,6 +67,8 @@ class ApiClient {
 
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
+    } else {
+      console.warn('[API] No token available for request:', endpoint);
     }
 
     const response = await fetch(url, {
@@ -61,6 +77,17 @@ class ApiClient {
     });
 
     const data = await response.json().catch(() => null);
+
+    // If 401 and not a retry and not the refresh endpoint, try to refresh token
+    if (response.status === 401 && !isRetry && !endpoint.includes('/auth/refresh')) {
+      console.log('[API] Got 401, attempting to refresh token...');
+      const refreshed = await this.tryRefreshToken();
+
+      if (refreshed) {
+        console.log('[API] Token refreshed, retrying request...');
+        return this.request<T>(endpoint, options, true);
+      }
+    }
 
     if (!response.ok) {
       throw new ApiError(
@@ -71,6 +98,48 @@ class ApiClient {
     }
 
     return data;
+  }
+
+  private async tryRefreshToken(): Promise<boolean> {
+    try {
+      if (typeof window === 'undefined') return false;
+
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        console.warn('[API] No refresh token available');
+        return false;
+      }
+
+      const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        console.error('[API] Failed to refresh token');
+        // Clear tokens and redirect to login
+        this.setToken(null);
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
+        return false;
+      }
+
+      const data = await response.json();
+      this.setToken(data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+
+      console.log('[API] Token refreshed successfully');
+      return true;
+    } catch (error) {
+      console.error('[API] Error refreshing token:', error);
+      return false;
+    }
   }
 
   async get<T>(endpoint: string): Promise<T> {
