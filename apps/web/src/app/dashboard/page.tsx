@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { Workspace, User } from '@/types';
+import { Sidebar } from '@/components/sidebar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, FileText, Clock } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -54,121 +59,123 @@ export default function DashboardPage() {
     }
   };
 
-  const handleLogout = () => {
-    api.setToken(null);
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    router.push('/');
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="flex h-screen">
+        <Sidebar workspaces={[]} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-sm text-muted-foreground">Loading...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Notely</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {user?.name}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar workspaces={workspaces} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold">Your Workspaces</h2>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            + New Workspace
-          </button>
-        </div>
-
-        {workspaces.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              You don&apos;t have any workspaces yet.
+      <main className="flex-1 overflow-auto notion-scrollbar">
+        <div className="max-w-4xl mx-auto px-12 py-16">
+          <div className="mb-12">
+            <h1 className="text-4xl font-bold mb-2">
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0] || 'there'}
+            </h1>
+            <p className="text-muted-foreground">
+              {workspaces.length === 0
+                ? 'Get started by creating your first workspace'
+                : 'Continue where you left off'}
             </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Create Your First Workspace
-            </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {workspaces.map((workspace) => (
-              <Link
-                key={workspace.id}
-                href={`/workspace/${workspace.id}`}
-                className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow hover:shadow-lg transition border border-gray-200 dark:border-gray-800"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  {workspace.icon && (
-                    <span className="text-2xl">{workspace.icon}</span>
-                  )}
-                  <h3 className="text-xl font-semibold">{workspace.name}</h3>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Click to open
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
+
+          {workspaces.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center mb-6">
+                <FileText className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-2xl font-semibold mb-2">Create your first workspace</h2>
+              <p className="text-muted-foreground mb-6 max-w-sm">
+                Workspaces help you organize your pages and collaborate with others.
+              </p>
+              <Button onClick={() => setShowCreateModal(true)} size="lg">
+                <Plus className="h-4 w-4 mr-2" />
+                New workspace
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">Your workspaces</h2>
+                <Button onClick={() => setShowCreateModal(true)} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New workspace
+                </Button>
+              </div>
+
+              <div className="grid gap-3">
+                {workspaces.map((workspace) => (
+                  <Link
+                    key={workspace.id}
+                    href={`/workspace/${workspace.id}`}
+                    className="group flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
+                      {workspace.icon ? (
+                        <span className="text-xl">{workspace.icon}</span>
+                      ) : (
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium group-hover:text-foreground transition-colors truncate">
+                        {workspace.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(workspace.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </main>
 
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Create New Workspace</h3>
-            <form onSubmit={handleCreateWorkspace}>
-              <input
-                type="text"
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create new workspace</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateWorkspace} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <label htmlFor="workspace-name" className="text-sm font-medium">
+                Name
+              </label>
+              <Input
+                id="workspace-name"
                 value={newWorkspaceName}
                 onChange={(e) => setNewWorkspaceName(e.target.value)}
-                placeholder="Workspace name"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg mb-4 dark:bg-gray-800"
+                placeholder="My workspace"
                 autoFocus
               />
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setNewWorkspaceName('');
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewWorkspaceName('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Create</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
