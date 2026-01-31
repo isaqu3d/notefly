@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import type { Block, BlockType } from '@/types';
+import type { Block } from '@/types';
 
 interface BlockEditorProps {
   block: Block;
