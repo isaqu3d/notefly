@@ -3,8 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import type { AuthResponse } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { ArrowLeft, FileText } from 'lucide-react';
+
+interface FieldError {
+  path: string;
+  message: string;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,19 +22,22 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
 
+    // Client-side validation
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setFieldErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setFieldErrors({ password: 'Password must be at least 6 characters' });
       return;
     }
 
@@ -44,111 +56,173 @@ export default function RegisterPage() {
 
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      if (err instanceof ApiError && err.data?.errors) {
+        // Handle validation errors from backend
+        const errors: Record<string, string> = {};
+        (err.data.errors as FieldError[]).forEach((fieldError) => {
+          errors[fieldError.path] = fieldError.message;
+        });
+        setFieldErrors(errors);
+        setError('Please fix the errors below');
+      } else if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-950">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-center mb-8">Get Started</h1>
+    <div className="min-h-screen flex flex-col">
+      <header className="border-b">
+        <div className="container flex h-14 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <ArrowLeft className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded bg-foreground flex items-center justify-center">
+                <FileText className="h-4 w-4 text-background" />
+              </div>
+              <span className="text-lg font-semibold">Notely</span>
+            </div>
+          </Link>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm space-y-6">
+          <div className="space-y-2 text-center">
+            <h1 className="text-3xl font-bold tracking-tight">Create an account</h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your email below to create your account
+            </p>
+          </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm">
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium leading-none">
                 Name
               </label>
-              <input
+              <Input
                 id="name"
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (fieldErrors.name) {
+                    setFieldErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.name;
+                      return newErrors;
+                    });
+                  }
+                }}
                 required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
                 placeholder="John Doe"
+                className={fieldErrors.name ? 'border-destructive' : ''}
               />
+              {fieldErrors.name && (
+                <p className="text-sm text-destructive">{fieldErrors.name}</p>
+              )}
             </div>
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium mb-2"
-              >
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium leading-none">
                 Email
               </label>
-              <input
+              <Input
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) {
+                    setFieldErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.email;
+                      return newErrors;
+                    });
+                  }
+                }}
                 required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
-                placeholder="you@example.com"
+                placeholder="name@example.com"
+                className={fieldErrors.email ? 'border-destructive' : ''}
               />
+              {fieldErrors.email && (
+                <p className="text-sm text-destructive">{fieldErrors.email}</p>
+              )}
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium mb-2"
-              >
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium leading-none">
                 Password
               </label>
-              <input
+              <Input
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) {
+                    setFieldErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.password;
+                      return newErrors;
+                    });
+                  }
+                }}
                 required
                 minLength={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
-                placeholder="••••••••"
+                className={fieldErrors.password ? 'border-destructive' : ''}
               />
+              {fieldErrors.password && (
+                <p className="text-sm text-destructive">{fieldErrors.password}</p>
+              )}
             </div>
 
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium mb-2"
-              >
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium leading-none">
                 Confirm Password
               </label>
-              <input
+              <Input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (fieldErrors.confirmPassword) {
+                    setFieldErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.confirmPassword;
+                      return newErrors;
+                    });
+                  }
+                }}
                 required
                 minLength={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800"
-                placeholder="••••••••"
+                className={fieldErrors.confirmPassword ? 'border-destructive' : ''}
               />
+              {fieldErrors.confirmPassword && (
+                <p className="text-sm text-destructive">{fieldErrors.confirmPassword}</p>
+              )}
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
-            >
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? 'Creating account...' : 'Create Account'}
-            </button>
+            </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link
-              href="/auth/login"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
+            <Link href="/auth/login" className="underline underline-offset-4 hover:text-primary">
               Sign in
             </Link>
           </p>
