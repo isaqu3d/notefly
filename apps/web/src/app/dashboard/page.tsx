@@ -102,7 +102,7 @@ export default function DashboardPage() {
         {workspaces.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              You don't have any workspaces yet.
+              You don&apos;t have any workspaces yet.
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
