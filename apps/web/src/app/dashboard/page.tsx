@@ -1,15 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { api } from '@/lib/api';
-import type { Workspace, User } from '@/types';
 import { Sidebar } from '@/components/sidebar';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, FileText, Clock } from 'lucide-react';
+import { api } from '@/lib/api';
+import type { User, Workspace } from '@/types';
+import { Clock, FileText, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,9 +45,17 @@ export default function DashboardPage() {
   const loadWorkspaces = async () => {
     try {
       const data = await api.get<Workspace[]>('/workspaces');
-      setWorkspaces(data);
+      console.log('[Dashboard] Workspaces data:', data);
+
+      if (Array.isArray(data)) {
+        setWorkspaces(data);
+      } else {
+        console.warn('[Dashboard] Expected array but got:', typeof data, data);
+        setWorkspaces([]);
+      }
     } catch (error) {
       console.error('Failed to load workspaces:', error);
+      setWorkspaces([]);
     } finally {
       setLoading(false);
     }
@@ -81,7 +94,13 @@ export default function DashboardPage() {
         <div className="max-w-4xl mx-auto px-12 py-16">
           <div className="mb-12">
             <h1 className="text-4xl font-bold mb-2">
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0] || 'there'}
+              Good{' '}
+              {new Date().getHours() < 12
+                ? 'morning'
+                : new Date().getHours() < 18
+                  ? 'afternoon'
+                  : 'evening'}
+              , {user?.name?.split(' ')[0] || 'there'}
             </h1>
             <p className="text-muted-foreground">
               {workspaces.length === 0
@@ -95,9 +114,12 @@ export default function DashboardPage() {
               <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center mb-6">
                 <FileText className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h2 className="text-2xl font-semibold mb-2">Create your first workspace</h2>
+              <h2 className="text-2xl font-semibold mb-2">
+                Create your first workspace
+              </h2>
               <p className="text-muted-foreground mb-6 max-w-sm">
-                Workspaces help you organize your pages and collaborate with others.
+                Workspaces help you organize your pages and collaborate with
+                others.
               </p>
               <Button onClick={() => setShowCreateModal(true)} size="lg">
                 <Plus className="h-4 w-4 mr-2" />
@@ -108,7 +130,11 @@ export default function DashboardPage() {
             <>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Your workspaces</h2>
-                <Button onClick={() => setShowCreateModal(true)} variant="outline" size="sm">
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  variant="outline"
+                  size="sm"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   New workspace
                 </Button>

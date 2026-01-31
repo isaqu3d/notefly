@@ -6,6 +6,17 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { Workspace, Page } from '@/types';
 import { formatRelativeTime } from '@/lib/utils';
+import { Sidebar } from '@/components/sidebar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Plus, FileText } from 'lucide-react';
 
 export default function WorkspacePage() {
   const router = useRouter();
@@ -14,11 +25,13 @@ export default function WorkspacePage() {
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newPageTitle, setNewPageTitle] = useState('');
 
   useEffect(() => {
+    api.refreshToken();
     const token = api.getToken();
     if (!token) {
       router.push('/auth/login');
@@ -27,6 +40,7 @@ export default function WorkspacePage() {
 
     loadWorkspace();
     loadPages();
+    loadWorkspaces();
   }, [workspaceId, router]);
 
   const loadWorkspace = async () => {
@@ -40,13 +54,27 @@ export default function WorkspacePage() {
 
   const loadPages = async () => {
     try {
-      const data = await api.get<Page[]>('/pages');
-      const workspacePages = data.filter((p) => p.workspaceId === workspaceId && !p.parentId);
+      const response = await api.get<{ data: Page[]; meta: { total: number } }>('/pages');
+      console.log('[Workspace] Pages response:', response);
+
+      // Backend returns { data: [...], meta: {...} }
+      const pages = response.data || [];
+      const workspacePages = pages.filter((p) => p.workspaceId === workspaceId && !p.parentId);
       setPages(workspacePages);
     } catch (error) {
       console.error('Failed to load pages:', error);
+      setPages([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadWorkspaces = async () => {
+    try {
+      const data = await api.get<Workspace[]>('/workspaces');
+      setWorkspaces(data);
+    } catch (error) {
+      console.error('Failed to load workspaces:', error);
     }
   };
 
@@ -55,16 +83,19 @@ export default function WorkspacePage() {
     if (!newPageTitle.trim()) return;
 
     try {
-      await api.post('/pages', {
+      console.log('[Workspace] Creating page:', { title: newPageTitle, workspaceId });
+      const response = await api.post('/pages', {
         title: newPageTitle,
         workspaceId,
         visibility: 'WORKSPACE',
       });
+      console.log('[Workspace] Page created:', response);
       setNewPageTitle('');
-      setShowCreateModal(false);
+      setShowCreateDialog(false);
       loadPages();
     } catch (error) {
       console.error('Failed to create page:', error);
+      alert('Failed to create page. Check console for details.');
     }
   };
 
@@ -77,108 +108,103 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              ← Back
-            </Link>
-            <div className="flex items-center gap-2">
-              {workspace?.icon && <span className="text-2xl">{workspace.icon}</span>}
-              <h1 className="text-2xl font-bold">{workspace?.name}</h1>
+    <div className="flex h-screen bg-background">
+      <Sidebar workspaces={workspaces} />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-auto notion-scrollbar">
+          <main className="max-w-4xl mx-auto px-24 py-12">
+            {/* Workspace Header */}
+            <div className="mb-12">
+              <div className="flex items-center gap-3 mb-2">
+                {workspace?.icon && <span className="text-6xl">{workspace.icon}</span>}
+              </div>
+              <h1 className="text-4xl font-bold mb-1">{workspace?.name}</h1>
+              <p className="text-sm text-muted-foreground">
+                {pages.length} {pages.length === 1 ? 'page' : 'pages'}
+              </p>
             </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold">Pages</h2>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            + New Page
-          </button>
-        </div>
-
-        {pages.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              No pages yet. Create your first page to get started.
-            </p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Create First Page
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {pages.map((page) => (
-              <Link
-                key={page.id}
-                href={`/page/${page.id}`}
-                className="block p-4 bg-white dark:bg-gray-900 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition border border-gray-200 dark:border-gray-800"
-              >
-                <div className="flex items-center gap-3">
-                  {page.icon && <span className="text-xl">{page.icon}</span>}
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{page.title}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Updated {formatRelativeTime(page.updatedAt)}
-                    </p>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800">
-                    {page.visibility.toLowerCase()}
-                  </span>
+            {/* Pages List */}
+            <div className="space-y-1">
+              {pages.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-muted-foreground mb-6">
+                    No pages yet. Create your first page to get started.
+                  </p>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Page
+                  </Button>
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </main>
+              ) : (
+                <>
+                  {pages.map((page) => (
+                    <Link
+                      key={page.id}
+                      href={`/page/${page.id}`}
+                      className="group flex items-center gap-2 px-2 py-1.5 -mx-2 rounded-md hover:bg-accent transition-colors"
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {page.icon ? (
+                          <span className="text-lg flex-shrink-0">{page.icon}</span>
+                        ) : (
+                          <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        )}
+                        <span className="truncate">{page.title}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        {formatRelativeTime(page.updatedAt)}
+                      </span>
+                    </Link>
+                  ))}
 
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Create New Page</h3>
-            <form onSubmit={handleCreatePage}>
-              <input
-                type="text"
+                  {/* Quick Add Button */}
+                  <button
+                    onClick={() => setShowCreateDialog(true)}
+                    className="flex items-center gap-2 px-2 py-1.5 -mx-2 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors w-full"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="text-sm">New page</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Create Page Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Page</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreatePage}>
+            <div className="py-4">
+              <Input
                 value={newPageTitle}
                 onChange={(e) => setNewPageTitle(e.target.value)}
                 placeholder="Page title"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg mb-4 dark:bg-gray-800"
                 autoFocus
               />
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setNewPageTitle('');
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowCreateDialog(false);
+                  setNewPageTitle('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Create</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
