@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { loginSchema, registerSchema } from '@notely/validators';
 import { Public } from '../common';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -34,7 +41,7 @@ export class AuthController {
     const user = await this.authService.validateUser(body.email, body.password);
 
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     return this.authService.login(user.id, user.email);
