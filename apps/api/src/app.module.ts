@@ -22,8 +22,8 @@ import { HealthModule } from './health/health.module';
     }),
     ThrottlerModule.forRoot([
       {
-        ttl: 60000,
-        limit: 10,
+        ttl: 60000, // 60 seconds
+        limit: 100, // 100 requests per minute (was 10)
       },
     ]),
     CacheModule,
