@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
   FileText,
   Home,
@@ -13,7 +13,9 @@ import {
   ChevronDown,
   LogOut,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import type { User } from '@/types';
 
 interface SidebarProps {
   workspaces?: Array<{ id: string; name: string }>;
@@ -22,7 +24,16 @@ interface SidebarProps {
 export function Sidebar({ workspaces = [] }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations('common');
   const [showWorkspaces, setShowWorkspaces] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setUser(JSON.parse(userStr));
+    }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -31,10 +42,19 @@ export function Sidebar({ workspaces = [] }: SidebarProps) {
     router.push('/');
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const navigation = [
-    { name: 'Home', href: '/dashboard', icon: Home },
-    { name: 'Search', href: '/search', icon: Search },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: t('home'), href: '/dashboard', icon: Home },
+    { name: t('search'), href: '/search', icon: Search },
+    { name: t('settings'), href: '/settings', icon: Settings },
   ];
 
   return (
@@ -74,7 +94,7 @@ export function Sidebar({ workspaces = [] }: SidebarProps) {
             onClick={() => setShowWorkspaces(!showWorkspaces)}
             className="flex w-full items-center justify-between px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
-            <span>Workspaces</span>
+            <span>{t('workspaces')}</span>
             <ChevronDown
               className={`h-3 w-3 transition-transform ${
                 showWorkspaces ? 'rotate-0' : '-rotate-90'
@@ -111,7 +131,7 @@ export function Sidebar({ workspaces = [] }: SidebarProps) {
                   size="sm"
                 >
                   <Plus className="h-3 w-3" />
-                  New workspace
+                  {t('newWorkspace')}
                 </Button>
               </Link>
             </div>
@@ -119,17 +139,26 @@ export function Sidebar({ workspaces = [] }: SidebarProps) {
         </div>
       </div>
 
-      <div className="border-t p-3 space-y-2">
-        <div className="flex items-center justify-between">
+      <div className="border-t p-3">
+        <div className="flex items-center gap-2">
+          <Link href="/settings" className="flex items-center gap-2 flex-1 min-w-0">
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={user?.avatar || undefined} alt={user?.name || 'User'} />
+              <AvatarFallback className="text-xs">
+                {user?.name ? getInitials(user.name) : 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm truncate">{user?.name || 'User'}</span>
+          </Link>
           <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
             onClick={handleLogout}
-            className="h-9 w-9"
-            title="Logout"
+            className="h-7 w-7 flex-shrink-0"
+            title={t('logout')}
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
