@@ -1,0 +1,153 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "create": "Create",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "settings": "Settings",
+    "logout": "Logout",
+    "home": "Home",
+    "workspaces": "Workspaces",
+    "newWorkspace": "New workspace",
+    "pages": "pages",
+    "page": "page"
+  },
+  "landing": {
+    "hero": "Write, plan, share. With AI at your side.",
+    "subtitle": "Notely is a modern workspace for your notes, docs, and knowledge base. Organize everything in one place.",
+    "getStarted": "Get Started",
+    "signIn": "Sign In",
+    "features": {
+      "editor": "Powerful Editor",
+      "editorDesc": "Block-based editor with 12+ content types, slash commands, and drag & drop.",
+      "fast": "Lightning Fast",
+      "fastDesc": "Built with Next.js 15 and React 19 for instant page loads and smooth interactions.",
+      "team": "Team Workspaces",
+      "teamDesc": "Collaborate with your team in shared workspaces with role-based permissions."
+    },
+    "footer": "Built with Next.js, NestJS, and PostgreSQL"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Enter your email to sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "checkCredentials": "Please check your credentials",
+      "failed": "Login failed. Please try again.",
+      "welcome": "Welcome back!"
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Enter your email below to create your account",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Create Account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "passwordsDontMatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "fixErrors": "Please fix the errors below",
+      "failed": "Registration failed. Please try again.",
+      "success": "Account created successfully!"
+    }
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "getStarted": "Get started by creating your first workspace",
+    "continueWork": "Continue where you left off",
+    "createFirst": "Create your first workspace",
+    "createFirstDesc": "Workspaces help you organize your pages and collaborate with others.",
+    "yourWorkspaces": "Your workspaces",
+    "workspaceCreated": "Workspace created!",
+    "workspaceCreateFailed": "Failed to create workspace",
+    "createNewWorkspace": "Create new workspace",
+    "workspaceName": "Name"
+  },
+  "workspace": {
+    "newPage": "New page",
+    "createFirstPage": "Create First Page",
+    "noPagesYet": "No pages yet. Create your first page to get started.",
+    "createNewPage": "Create New Page",
+    "pageTitle": "Page title",
+    "pageCreated": "Page created!",
+    "pageCreateFailed": "Failed to create page"
+  },
+  "editor": {
+    "untitled": "Untitled",
+    "startWriting": "Click or press 'Enter' to start writing...",
+    "titleUpdateFailed": "Failed to update title",
+    "saveFailed": "Failed to save changes",
+    "deleteFailed": "Failed to delete block",
+    "createFailed": "Failed to create block",
+    "slashPlaceholder": "Type something or type '/' for commands..."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences",
+    "profile": "Profile",
+    "noNameSet": "No name set",
+    "uploading": "Uploading...",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Email",
+    "emailCantChange": "Email cannot be changed",
+    "profileUpdated": "Profile updated!",
+    "profileUpdateFailed": "Failed to update profile",
+    "avatarUpdated": "Avatar updated!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeDesc": "Switch between light and dark mode",
+    "language": "Language",
+    "languageDesc": "Choose your preferred language",
+    "account": "Account",
+    "dangerZone": "Danger Zone",
+    "logoutDesc": "Once you logout, you'll need to sign in again to access your account."
+  },
+  "search": {
+    "title": "Search",
+    "subtitle": "Find your pages quickly",
+    "placeholder": "Search pages...",
+    "searchYourPages": "Search your pages",
+    "typeToSearch": "Type to search across all your pages and workspaces",
+    "noResults": "No results found for \"{query}\"",
+    "result": "result",
+    "results": "results",
+    "updated": "Updated"
+  },
+  "members": {
+    "title": "Members",
+    "invite": "Invite",
+    "inviteMember": "Invite Member",
+    "emailPlaceholder": "member@example.com",
+    "role": "Role",
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member",
+    "viewer": "Viewer",
+    "remove": "Remove",
+    "changeRole": "Change role",
+    "invited": "Member invited!",
+    "inviteFailed": "Failed to invite member",
+    "removed": "Member removed",
+    "removeFailed": "Failed to remove member",
+    "roleUpdated": "Role updated!",
+    "roleUpdateFailed": "Failed to update role"
+  }
+}

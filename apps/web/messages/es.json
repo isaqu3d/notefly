@@ -1,0 +1,153 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "search": "Buscar",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión",
+    "home": "Inicio",
+    "workspaces": "Espacios",
+    "newWorkspace": "Nuevo espacio",
+    "pages": "páginas",
+    "page": "página"
+  },
+  "landing": {
+    "hero": "Escribe, planifica, comparte. Con IA a tu lado.",
+    "subtitle": "Notely es un espacio de trabajo moderno para tus notas, documentos y base de conocimiento. Organiza todo en un solo lugar.",
+    "getStarted": "Comenzar",
+    "signIn": "Iniciar sesión",
+    "features": {
+      "editor": "Editor Potente",
+      "editorDesc": "Editor basado en bloques con más de 12 tipos de contenido, comandos slash y arrastrar y soltar.",
+      "fast": "Ultra Rápido",
+      "fastDesc": "Construido con Next.js 15 y React 19 para cargas instantáneas e interacciones suaves.",
+      "team": "Espacios de Equipo",
+      "teamDesc": "Colabora con tu equipo en espacios compartidos con permisos basados en roles."
+    },
+    "footer": "Construido con Next.js, NestJS y PostgreSQL"
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de vuelta",
+      "subtitle": "Ingresa tu correo para acceder a tu cuenta",
+      "email": "Correo",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión...",
+      "noAccount": "¿No tienes una cuenta?",
+      "signUp": "Regístrate",
+      "checkCredentials": "Verifica tus credenciales",
+      "failed": "Error al iniciar sesión. Intenta de nuevo.",
+      "welcome": "¡Bienvenido de vuelta!"
+    },
+    "register": {
+      "title": "Crear una cuenta",
+      "subtitle": "Completa tus datos para crear tu cuenta",
+      "name": "Nombre",
+      "email": "Correo",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "submit": "Crear Cuenta",
+      "submitting": "Creando cuenta...",
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Inicia sesión",
+      "passwordsDontMatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+      "fixErrors": "Corrige los errores abajo",
+      "failed": "Error al registrarse. Intenta de nuevo.",
+      "success": "¡Cuenta creada exitosamente!"
+    }
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Buenos días",
+      "afternoon": "Buenas tardes",
+      "evening": "Buenas noches"
+    },
+    "getStarted": "Comienza creando tu primer espacio de trabajo",
+    "continueWork": "Continúa donde lo dejaste",
+    "createFirst": "Crea tu primer espacio",
+    "createFirstDesc": "Los espacios te ayudan a organizar tus páginas y colaborar con otros.",
+    "yourWorkspaces": "Tus espacios",
+    "workspaceCreated": "¡Espacio creado!",
+    "workspaceCreateFailed": "Error al crear espacio",
+    "createNewWorkspace": "Crear nuevo espacio",
+    "workspaceName": "Nombre"
+  },
+  "workspace": {
+    "newPage": "Nueva página",
+    "createFirstPage": "Crear Primera Página",
+    "noPagesYet": "Sin páginas aún. Crea tu primera página para comenzar.",
+    "createNewPage": "Crear Nueva Página",
+    "pageTitle": "Título de la página",
+    "pageCreated": "¡Página creada!",
+    "pageCreateFailed": "Error al crear página"
+  },
+  "editor": {
+    "untitled": "Sin título",
+    "startWriting": "Haz clic o presiona 'Enter' para comenzar a escribir...",
+    "titleUpdateFailed": "Error al actualizar título",
+    "saveFailed": "Error al guardar cambios",
+    "deleteFailed": "Error al eliminar bloque",
+    "createFailed": "Error al crear bloque",
+    "slashPlaceholder": "Escribe algo o '/' para comandos..."
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Administra tu cuenta y preferencias",
+    "profile": "Perfil",
+    "noNameSet": "Sin nombre definido",
+    "uploading": "Subiendo...",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "emailLabel": "Correo",
+    "emailCantChange": "El correo no se puede cambiar",
+    "profileUpdated": "¡Perfil actualizado!",
+    "profileUpdateFailed": "Error al actualizar perfil",
+    "avatarUpdated": "¡Avatar actualizado!",
+    "avatarUploadFailed": "Error al subir avatar",
+    "appearance": "Apariencia",
+    "theme": "Tema",
+    "themeDesc": "Cambiar entre modo claro y oscuro",
+    "language": "Idioma",
+    "languageDesc": "Elige tu idioma preferido",
+    "account": "Cuenta",
+    "dangerZone": "Zona de Peligro",
+    "logoutDesc": "Al cerrar sesión, necesitarás iniciar sesión nuevamente para acceder a tu cuenta."
+  },
+  "search": {
+    "title": "Buscar",
+    "subtitle": "Encuentra tus páginas rápidamente",
+    "placeholder": "Buscar páginas...",
+    "searchYourPages": "Busca tus páginas",
+    "typeToSearch": "Escribe para buscar en todas tus páginas y espacios",
+    "noResults": "No se encontraron resultados para \"{query}\"",
+    "result": "resultado",
+    "results": "resultados",
+    "updated": "Actualizado"
+  },
+  "members": {
+    "title": "Miembros",
+    "invite": "Invitar",
+    "inviteMember": "Invitar Miembro",
+    "emailPlaceholder": "miembro@ejemplo.com",
+    "role": "Rol",
+    "owner": "Dueño",
+    "admin": "Admin",
+    "member": "Miembro",
+    "viewer": "Visualizador",
+    "remove": "Eliminar",
+    "changeRole": "Cambiar rol",
+    "invited": "¡Miembro invitado!",
+    "inviteFailed": "Error al invitar miembro",
+    "removed": "Miembro eliminado",
+    "removeFailed": "Error al eliminar miembro",
+    "roleUpdated": "¡Rol actualizado!",
+    "roleUpdateFailed": "Error al actualizar rol"
+  }
+}
