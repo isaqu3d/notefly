@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { api, ApiError } from '@/lib/api';
-import type { AuthResponse } from '@/types';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { api, ApiError } from '@/lib/api';
+import type { AuthResponse } from '@/types';
+import { FileText } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface FieldError {
   path: string;
@@ -77,9 +77,11 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
-        <div className="container flex h-14 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ArrowLeft className="h-4 w-4" />
+        <div className="container flex h-14 items-center justify-between px-6 md:px-12">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded bg-foreground flex items-center justify-center">
                 <FileText className="h-4 w-4 text-background" />
@@ -94,7 +96,9 @@ export default function RegisterPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-sm space-y-6">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold tracking-tight">Create an account</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Create an account
+            </h1>
             <p className="text-sm text-muted-foreground">
               Enter your email below to create your account
             </p>
@@ -108,7 +112,10 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium leading-none">
+              <label
+                htmlFor="name"
+                className="text-sm font-medium leading-none"
+              >
                 Name
               </label>
               <Input
@@ -135,7 +142,10 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium leading-none">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium leading-none"
+              >
                 Email
               </label>
               <Input
@@ -162,7 +172,10 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium leading-none">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium leading-none"
+              >
                 Password
               </label>
               <Input
@@ -184,12 +197,17 @@ export default function RegisterPage() {
                 className={fieldErrors.password ? 'border-destructive' : ''}
               />
               {fieldErrors.password && (
-                <p className="text-sm text-destructive">{fieldErrors.password}</p>
+                <p className="text-sm text-destructive">
+                  {fieldErrors.password}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium leading-none">
+              <label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium leading-none"
+              >
                 Confirm Password
               </label>
               <Input
@@ -208,10 +226,14 @@ export default function RegisterPage() {
                 }}
                 required
                 minLength={6}
-                className={fieldErrors.confirmPassword ? 'border-destructive' : ''}
+                className={
+                  fieldErrors.confirmPassword ? 'border-destructive' : ''
+                }
               />
               {fieldErrors.confirmPassword && (
-                <p className="text-sm text-destructive">{fieldErrors.confirmPassword}</p>
+                <p className="text-sm text-destructive">
+                  {fieldErrors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -222,7 +244,10 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/auth/login" className="underline underline-offset-4 hover:text-primary">
+            <Link
+              href="/auth/login"
+              className="underline underline-offset-4 hover:text-primary"
+            >
               Sign in
             </Link>
           </p>

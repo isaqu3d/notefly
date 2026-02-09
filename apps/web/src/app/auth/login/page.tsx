@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { api, ApiError } from '@/lib/api';
-import type { AuthResponse } from '@/types';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { api, ApiError } from '@/lib/api';
+import type { AuthResponse } from '@/types';
+import { FileText } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface FieldError {
   path: string;
@@ -61,9 +61,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
-        <div className="container flex h-14 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ArrowLeft className="h-4 w-4" />
+        <div className="container flex h-14 items-center justify-between px-6 md:px-12">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded bg-foreground flex items-center justify-center">
                 <FileText className="h-4 w-4 text-background" />
@@ -92,7 +94,10 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium leading-none">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium leading-none"
+              >
                 Email
               </label>
               <Input
@@ -119,7 +124,10 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium leading-none">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium leading-none"
+              >
                 Password
               </label>
               <Input
@@ -140,7 +148,9 @@ export default function LoginPage() {
                 className={fieldErrors.password ? 'border-destructive' : ''}
               />
               {fieldErrors.password && (
-                <p className="text-sm text-destructive">{fieldErrors.password}</p>
+                <p className="text-sm text-destructive">
+                  {fieldErrors.password}
+                </p>
               )}
             </div>
 
@@ -151,7 +161,10 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="underline underline-offset-4 hover:text-primary">
+            <Link
+              href="/auth/register"
+              className="underline underline-offset-4 hover:text-primary"
+            >
               Sign up
             </Link>
           </p>
