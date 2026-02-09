@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api, ApiError } from '@/lib/api';
 import type { AuthResponse } from '@/types';
+import { Link, useRouter } from '@/i18n/navigation';
 import { FileText } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ interface FieldError {
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useTranslations('auth.login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -40,7 +41,7 @@ export default function LoginPage() {
       localStorage.setItem('refresh_token', response.refresh_token);
       localStorage.setItem('user', JSON.stringify(response.user));
 
-      toast.success('Welcome back!');
+      toast.success(t('welcome'));
       router.push('/dashboard');
     } catch (err) {
       const apiData = err instanceof ApiError ? (err.data as Record<string, unknown>) : null;
@@ -50,11 +51,11 @@ export default function LoginPage() {
           errors[fieldError.path] = fieldError.message;
         });
         setFieldErrors(errors);
-        setError('Please check your credentials');
+        setError(t('checkCredentials'));
       } else if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError('Login failed. Please try again.');
+        setError(t('failed'));
       }
     } finally {
       setLoading(false);
@@ -83,9 +84,9 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-sm space-y-6">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email to sign in to your account
+              {t('subtitle')}
             </p>
           </div>
 
@@ -97,11 +98,8 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium leading-none"
-              >
-                Email
+              <label htmlFor="email" className="text-sm font-medium leading-none">
+                {t('email')}
               </label>
               <Input
                 id="email"
@@ -127,11 +125,8 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium leading-none"
-              >
-                Password
+              <label htmlFor="password" className="text-sm font-medium leading-none">
+                {t('password')}
               </label>
               <Input
                 id="password"
@@ -151,24 +146,22 @@ export default function LoginPage() {
                 className={fieldErrors.password ? 'border-destructive' : ''}
               />
               {fieldErrors.password && (
-                <p className="text-sm text-destructive">
-                  {fieldErrors.password}
-                </p>
+                <p className="text-sm text-destructive">{fieldErrors.password}</p>
               )}
             </div>
 
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? t('submitting') : t('submit')}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            {t('noAccount')}{' '}
             <Link
               href="/auth/register"
               className="underline underline-offset-4 hover:text-primary"
             >
-              Sign up
+              {t('signUp')}
             </Link>
           </p>
         </div>
