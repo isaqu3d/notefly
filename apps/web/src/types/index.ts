@@ -2,8 +2,20 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  avatar: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+
+export interface WorkspaceMember {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  role: WorkspaceRole;
+  createdAt: string;
+  user: User;
 }
 
 export interface AuthResponse {
