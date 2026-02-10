@@ -2,13 +2,13 @@
 
 import { BlockEditor } from '@/components/editor/BlockEditor';
 import { Sidebar } from '@/components/sidebar';
+import { Link, useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import type { Block, BlockType, Page, Workspace } from '@/types';
 import { ChevronRight } from 'lucide-react';
-import { Link, useRouter } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 export default function PageEditorPage() {
@@ -69,10 +69,8 @@ export default function PageEditorPage() {
 
   const loadBlocks = async () => {
     try {
-      const data = await api.get<Block[]>('/blocks');
-      const pageBlocks = data.filter(
-        (b) => b.pageId === pageId && !b.parentBlockId
-      );
+      const data = await api.get<Block[]>(`/blocks?pageId=${pageId}`);
+      const pageBlocks = data.filter((b) => !b.parentId);
       pageBlocks.sort((a, b) => a.position - b.position);
       setBlocks(pageBlocks);
     } catch (error) {
@@ -115,24 +113,19 @@ export default function PageEditorPage() {
       content: string,
       properties?: Record<string, unknown>
     ) => {
-      // Update local state immediately for responsive UI
       setBlocks((prev) =>
         prev.map((b) =>
-          b.id === blockId
-            ? { ...b, content, properties: properties || b.properties }
-            : b
+          b.id === blockId ? { ...b, content, ...(properties || {}) } : b
         )
       );
 
-      // Clear existing timeout for this block
       if (updateTimeoutRef.current[blockId]) {
         clearTimeout(updateTimeoutRef.current[blockId]);
       }
 
-      // Debounce API call - only send after 1500ms of no changes
       updateTimeoutRef.current[blockId] = setTimeout(async () => {
         try {
-          await api.put(`/blocks/${blockId}`, { content, properties });
+          await api.put(`/blocks/${blockId}`, { content, ...properties });
           console.log('[Editor] Block updated:', blockId);
         } catch (error) {
           console.error('Failed to update block:', error);
@@ -220,7 +213,12 @@ export default function PageEditorPage() {
           content: blockToDuplicate.content,
           pageId,
           position: newPosition,
-          properties: blockToDuplicate.properties,
+          checked: blockToDuplicate.checked,
+          language: blockToDuplicate.language,
+          icon: blockToDuplicate.icon,
+          color: blockToDuplicate.color,
+          url: blockToDuplicate.url,
+          caption: blockToDuplicate.caption,
         });
 
         setBlocks((prev) =>
