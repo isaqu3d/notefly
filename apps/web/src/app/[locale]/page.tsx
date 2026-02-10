@@ -1,9 +1,13 @@
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileText, Sparkles, Users2, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function HomePage() {
+  const t = useTranslations('landing');
+  const tc = useTranslations('common');
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -19,11 +23,11 @@ export default function HomePage() {
             <ThemeToggle />
             <Link href="/auth/login">
               <Button variant="ghost" size="sm">
-                Sign In
+                {t('signIn')}
               </Button>
             </Link>
             <Link href="/auth/register">
-              <Button size="sm">Get Started</Button>
+              <Button size="sm">{t('getStarted')}</Button>
             </Link>
           </div>
         </div>
@@ -38,22 +42,17 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-              Write, plan, share.
-              <br />
-              <span className="text-muted-foreground">
-                With AI at your side.
-              </span>
+              {t('hero')}
             </h1>
 
             <p className="max-w-[700px] text-lg text-muted-foreground sm:text-xl">
-              Notely is the connected workspace where better, faster work
-              happens. A beautiful, minimal editor with powerful blocks.
+              {t('subtitle')}
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 mt-4">
               <Link href="/auth/register">
                 <Button size="lg" className="gap-2">
-                  Get Notely free
+                  {t('getStarted')}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -67,10 +66,9 @@ export default function HomePage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                 <FileText className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl font-semibold">Powerful editor</h3>
+              <h3 className="mt-4 text-xl font-semibold">{t('features.editor')}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Rich text editing with drag-and-drop blocks. Headings, lists,
-                code blocks, and more.
+                {t('features.editorDesc')}
               </p>
             </div>
 
@@ -78,10 +76,9 @@ export default function HomePage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                 <Zap className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl font-semibold">Lightning fast</h3>
+              <h3 className="mt-4 text-xl font-semibold">{t('features.fast')}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Built on Next.js 15 with optimal performance. Your workspace
-                loads instantly.
+                {t('features.fastDesc')}
               </p>
             </div>
 
@@ -89,10 +86,9 @@ export default function HomePage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                 <Users2 className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl font-semibold">Team workspaces</h3>
+              <h3 className="mt-4 text-xl font-semibold">{t('features.team')}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Organize projects in workspaces. Perfect for teams and personal
-                use.
+                {t('features.teamDesc')}
               </p>
             </div>
           </div>
@@ -101,7 +97,7 @@ export default function HomePage() {
 
       <footer className="border-t py-6">
         <div className="container flex flex-col items-center justify-center gap-4 text-center text-sm text-muted-foreground">
-          <p>Built with Next.js, NestJS, and PostgreSQL</p>
+          <p>{t('footer')}</p>
         </div>
       </footer>
     </div>
