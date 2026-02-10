@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api, ApiError } from '@/lib/api';
 import type { AuthResponse } from '@/types';
+import { Link, useRouter } from '@/i18n/navigation';
 import { FileText } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ interface FieldError {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations('auth.register');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,14 +32,13 @@ export default function RegisterPage() {
     setError('');
     setFieldErrors({});
 
-    // Client-side validation
     if (password !== confirmPassword) {
-      setFieldErrors({ confirmPassword: 'Passwords do not match' });
+      setFieldErrors({ confirmPassword: t('passwordsDontMatch') });
       return;
     }
 
     if (password.length < 6) {
-      setFieldErrors({ password: 'Password must be at least 6 characters' });
+      setFieldErrors({ password: t('passwordTooShort') });
       return;
     }
 
@@ -55,7 +55,7 @@ export default function RegisterPage() {
       localStorage.setItem('refresh_token', response.refresh_token);
       localStorage.setItem('user', JSON.stringify(response.user));
 
-      toast.success('Account created successfully!');
+      toast.success(t('success'));
       router.push('/dashboard');
     } catch (err) {
       const apiData = err instanceof ApiError ? (err.data as Record<string, unknown>) : null;
@@ -65,11 +65,11 @@ export default function RegisterPage() {
           errors[fieldError.path] = fieldError.message;
         });
         setFieldErrors(errors);
-        setError('Please fix the errors below');
+        setError(t('fixErrors'));
       } else if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError('Registration failed. Please try again.');
+        setError(t('failed'));
       }
     } finally {
       setLoading(false);
@@ -98,12 +98,8 @@ export default function RegisterPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-sm space-y-6">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Create an account
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your email below to create your account
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
           </div>
 
           {error && (
@@ -114,11 +110,8 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label
-                htmlFor="name"
-                className="text-sm font-medium leading-none"
-              >
-                Name
+              <label htmlFor="name" className="text-sm font-medium leading-none">
+                {t('name')}
               </label>
               <Input
                 id="name"
@@ -127,11 +120,7 @@ export default function RegisterPage() {
                 onChange={(e) => {
                   setName(e.target.value);
                   if (fieldErrors.name) {
-                    setFieldErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.name;
-                      return newErrors;
-                    });
+                    setFieldErrors((prev) => { const n = { ...prev }; delete n.name; return n; });
                   }
                 }}
                 required
@@ -144,11 +133,8 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium leading-none"
-              >
-                Email
+              <label htmlFor="email" className="text-sm font-medium leading-none">
+                {t('email')}
               </label>
               <Input
                 id="email"
@@ -157,11 +143,7 @@ export default function RegisterPage() {
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (fieldErrors.email) {
-                    setFieldErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.email;
-                      return newErrors;
-                    });
+                    setFieldErrors((prev) => { const n = { ...prev }; delete n.email; return n; });
                   }
                 }}
                 required
@@ -174,11 +156,8 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium leading-none"
-              >
-                Password
+              <label htmlFor="password" className="text-sm font-medium leading-none">
+                {t('password')}
               </label>
               <Input
                 id="password"
@@ -187,11 +166,7 @@ export default function RegisterPage() {
                 onChange={(e) => {
                   setPassword(e.target.value);
                   if (fieldErrors.password) {
-                    setFieldErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.password;
-                      return newErrors;
-                    });
+                    setFieldErrors((prev) => { const n = { ...prev }; delete n.password; return n; });
                   }
                 }}
                 required
@@ -199,18 +174,13 @@ export default function RegisterPage() {
                 className={fieldErrors.password ? 'border-destructive' : ''}
               />
               {fieldErrors.password && (
-                <p className="text-sm text-destructive">
-                  {fieldErrors.password}
-                </p>
+                <p className="text-sm text-destructive">{fieldErrors.password}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="confirmPassword"
-                className="text-sm font-medium leading-none"
-              >
-                Confirm Password
+              <label htmlFor="confirmPassword" className="text-sm font-medium leading-none">
+                {t('confirmPassword')}
               </label>
               <Input
                 id="confirmPassword"
@@ -219,38 +189,30 @@ export default function RegisterPage() {
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
                   if (fieldErrors.confirmPassword) {
-                    setFieldErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.confirmPassword;
-                      return newErrors;
-                    });
+                    setFieldErrors((prev) => { const n = { ...prev }; delete n.confirmPassword; return n; });
                   }
                 }}
                 required
                 minLength={6}
-                className={
-                  fieldErrors.confirmPassword ? 'border-destructive' : ''
-                }
+                className={fieldErrors.confirmPassword ? 'border-destructive' : ''}
               />
               {fieldErrors.confirmPassword && (
-                <p className="text-sm text-destructive">
-                  {fieldErrors.confirmPassword}
-                </p>
+                <p className="text-sm text-destructive">{fieldErrors.confirmPassword}</p>
               )}
             </div>
 
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? t('submitting') : t('submit')}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            {t('hasAccount')}{' '}
             <Link
               href="/auth/login"
               className="underline underline-offset-4 hover:text-primary"
             >
-              Sign in
+              {t('signIn')}
             </Link>
           </p>
         </div>
