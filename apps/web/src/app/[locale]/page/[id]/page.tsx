@@ -5,13 +5,16 @@ import { Sidebar } from '@/components/sidebar';
 import { api } from '@/lib/api';
 import type { Block, BlockType, Page, Workspace } from '@/types';
 import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
+import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 export default function PageEditorPage() {
   const router = useRouter();
+  const t = useTranslations('editor');
+  const tc = useTranslations('common');
   const params = useParams();
   const pageId = params.id as string;
 
@@ -283,7 +286,7 @@ export default function PageEditorPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">{tc('loading')}</div>
       </div>
     );
   }
@@ -310,7 +313,7 @@ export default function PageEditorPage() {
                 <ChevronRight className="h-3 w-3" />
                 <span className="text-foreground">
                   {page?.icon && <span className="mr-1">{page.icon}</span>}
-                  {title || 'Untitled'}
+                  {title || t('untitled')}
                 </span>
               </div>
             )}
@@ -345,7 +348,7 @@ export default function PageEditorPage() {
                       handleTitleBlur();
                     }
                   }}
-                  placeholder="Untitled"
+                  placeholder={t('untitled')}
                   className="w-full text-5xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/30"
                   autoFocus
                 />
@@ -354,7 +357,7 @@ export default function PageEditorPage() {
                   onClick={() => setIsEditingTitle(true)}
                   className="text-5xl font-bold cursor-text hover:bg-accent/30 rounded px-2 -mx-2 transition-colors"
                 >
-                  {title || 'Untitled'}
+                  {title || t('untitled')}
                 </h1>
               )}
             </div>
@@ -367,7 +370,7 @@ export default function PageEditorPage() {
                     onClick={() => handleCreateBlock()}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
-                    Click or press &apos;Enter&apos; to start writing...
+                    {t('startWriting')}
                   </button>
                 </div>
               ) : (
