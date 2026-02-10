@@ -11,14 +11,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import type { User, Workspace } from '@/types';
+import { Link, useRouter } from '@/i18n/navigation';
 import { Clock, FileText, Plus } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const t = useTranslations('dashboard');
+  const tc = useTranslations('common');
   const [user, setUser] = useState<User | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,6 @@ export default function DashboardPage() {
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
   useEffect(() => {
-    // Refresh token from localStorage
     api.refreshToken();
     const token = api.getToken();
 
@@ -46,12 +47,9 @@ export default function DashboardPage() {
   const loadWorkspaces = async () => {
     try {
       const data = await api.get<Workspace[]>('/workspaces');
-      console.log('[Dashboard] Workspaces data:', data);
-
       if (Array.isArray(data)) {
         setWorkspaces(data);
       } else {
-        console.warn('[Dashboard] Expected array but got:', typeof data, data);
         setWorkspaces([]);
       }
     } catch (error) {
@@ -62,6 +60,13 @@ export default function DashboardPage() {
     }
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('greeting.morning');
+    if (hour < 18) return t('greeting.afternoon');
+    return t('greeting.evening');
+  };
+
   const handleCreateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWorkspaceName.trim()) return;
@@ -70,11 +75,11 @@ export default function DashboardPage() {
       await api.post('/workspaces', { name: newWorkspaceName });
       setNewWorkspaceName('');
       setShowCreateModal(false);
-      toast.success('Workspace created!');
+      toast.success(t('workspaceCreated'));
       loadWorkspaces();
     } catch (error) {
       console.error('Failed to create workspace:', error);
-      toast.error('Failed to create workspace');
+      toast.error(t('workspaceCreateFailed'));
     }
   };
 
@@ -83,7 +88,7 @@ export default function DashboardPage() {
       <div className="flex h-screen">
         <Sidebar workspaces={[]} />
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-sm text-muted-foreground">Loading...</div>
+          <div className="text-sm text-muted-foreground">{tc('loading')}</div>
         </div>
       </div>
     );
@@ -97,18 +102,10 @@ export default function DashboardPage() {
         <div className="max-w-4xl mx-auto px-12 py-16">
           <div className="mb-12">
             <h1 className="text-4xl font-bold mb-2">
-              Good{' '}
-              {new Date().getHours() < 12
-                ? 'morning'
-                : new Date().getHours() < 18
-                  ? 'afternoon'
-                  : 'evening'}
-              , {user?.name?.split(' ')[0] || 'there'}
+              {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}
             </h1>
             <p className="text-muted-foreground">
-              {workspaces.length === 0
-                ? 'Get started by creating your first workspace'
-                : 'Continue where you left off'}
+              {workspaces.length === 0 ? t('getStarted') : t('continueWork')}
             </p>
           </div>
 
@@ -117,29 +114,22 @@ export default function DashboardPage() {
               <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center mb-6">
                 <FileText className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h2 className="text-2xl font-semibold mb-2">
-                Create your first workspace
-              </h2>
+              <h2 className="text-2xl font-semibold mb-2">{t('createFirst')}</h2>
               <p className="text-muted-foreground mb-6 max-w-sm">
-                Workspaces help you organize your pages and collaborate with
-                others.
+                {t('createFirstDesc')}
               </p>
               <Button onClick={() => setShowCreateModal(true)} size="lg">
                 <Plus className="h-4 w-4 mr-2" />
-                New workspace
+                {tc('newWorkspace')}
               </Button>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Your workspaces</h2>
-                <Button
-                  onClick={() => setShowCreateModal(true)}
-                  variant="outline"
-                  size="sm"
-                >
+                <h2 className="text-xl font-semibold">{t('yourWorkspaces')}</h2>
+                <Button onClick={() => setShowCreateModal(true)} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
-                  New workspace
+                  {tc('newWorkspace')}
                 </Button>
               </div>
 
@@ -177,12 +167,12 @@ export default function DashboardPage() {
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create new workspace</DialogTitle>
+            <DialogTitle>{t('createNewWorkspace')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateWorkspace} className="space-y-4 mt-4">
             <div className="space-y-2">
               <label htmlFor="workspace-name" className="text-sm font-medium">
-                Name
+                {t('workspaceName')}
               </label>
               <Input
                 id="workspace-name"
@@ -196,14 +186,11 @@ export default function DashboardPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setNewWorkspaceName('');
-                }}
+                onClick={() => { setShowCreateModal(false); setNewWorkspaceName(''); }}
               >
-                Cancel
+                {tc('cancel')}
               </Button>
-              <Button type="submit">Create</Button>
+              <Button type="submit">{tc('create')}</Button>
             </div>
           </form>
         </DialogContent>
