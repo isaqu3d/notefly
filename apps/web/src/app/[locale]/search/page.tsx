@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import type { Page, Workspace } from '@/types';
 import { Sidebar } from '@/components/sidebar';
 import { Input } from '@/components/ui/input';
 import { Search, FileText, Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function SearchPage() {
   const router = useRouter();
+  const t = useTranslations('search');
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [allPages, setAllPages] = useState<Page[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,9 +61,9 @@ export default function SearchPage() {
       <main className="flex-1 overflow-auto notion-scrollbar">
         <div className="max-w-4xl mx-auto px-12 py-16">
           <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2">Search</h1>
+            <h1 className="text-4xl font-bold mb-2">{t('title')}</h1>
             <p className="text-muted-foreground">
-              Find your pages quickly
+              {t('subtitle')}
             </p>
           </div>
 
@@ -70,7 +71,7 @@ export default function SearchPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search pages..."
+              placeholder={t('placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -83,19 +84,19 @@ export default function SearchPage() {
               <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center mb-6">
                 <Search className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h2 className="text-xl font-semibold mb-2">Search your pages</h2>
+              <h2 className="text-xl font-semibold mb-2">{t('searchYourPages')}</h2>
               <p className="text-muted-foreground max-w-sm">
-                Type to search across all your pages and workspaces
+                {t('typeToSearch')}
               </p>
             </div>
           ) : searchResults.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No results found for &quot;{searchQuery}&quot;</p>
+              <p className="text-muted-foreground">{t('noResults', { query: searchQuery })}</p>
             </div>
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground mb-4">
-                {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'}
+                {searchResults.length} {searchResults.length === 1 ? t('result') : t('results')}
               </p>
               {searchResults.map((page) => (
                 <Link
@@ -116,7 +117,7 @@ export default function SearchPage() {
                     </h3>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      Updated {new Date(page.updatedAt).toLocaleDateString()}
+                      {t('updated')} {new Date(page.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
                 </Link>
