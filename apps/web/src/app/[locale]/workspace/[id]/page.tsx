@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import type { Workspace, Page } from '@/types';
 import { formatRelativeTime } from '@/lib/utils';
@@ -17,12 +16,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Plus, FileText } from 'lucide-react';
+import { Link, useRouter } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 export default function WorkspacePage() {
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
+  const t = useTranslations('workspace');
+  const tc = useTranslations('common');
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [pages, setPages] = useState<Page[]>([]);
@@ -56,11 +59,8 @@ export default function WorkspacePage() {
   const loadPages = async () => {
     try {
       const response = await api.get<{ data: Page[]; meta: { total: number } }>('/pages');
-      console.log('[Workspace] Pages response:', response);
-
-      // Backend returns { data: [...], meta: {...} }
-      const pages = response.data || [];
-      const workspacePages = pages.filter((p) => p.workspaceId === workspaceId && !p.parentId);
+      const allPages = response.data || [];
+      const workspacePages = allPages.filter((p) => p.workspaceId === workspaceId && !p.parentId);
       setPages(workspacePages);
     } catch (error) {
       console.error('Failed to load pages:', error);
@@ -84,27 +84,25 @@ export default function WorkspacePage() {
     if (!newPageTitle.trim()) return;
 
     try {
-      console.log('[Workspace] Creating page:', { title: newPageTitle, workspaceId });
-      const response = await api.post('/pages', {
+      await api.post('/pages', {
         title: newPageTitle,
         workspaceId,
         visibility: 'WORKSPACE',
       });
-      console.log('[Workspace] Page created:', response);
       setNewPageTitle('');
       setShowCreateDialog(false);
-      toast.success('Page created!');
+      toast.success(t('pageCreated'));
       loadPages();
     } catch (error) {
       console.error('Failed to create page:', error);
-      toast.error('Failed to create page');
+      toast.error(t('pageCreateFailed'));
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">{tc('loading')}</div>
       </div>
     );
   }
@@ -116,27 +114,23 @@ export default function WorkspacePage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-auto notion-scrollbar">
           <main className="max-w-4xl mx-auto px-24 py-12">
-            {/* Workspace Header */}
             <div className="mb-12">
               <div className="flex items-center gap-3 mb-2">
                 {workspace?.icon && <span className="text-6xl">{workspace.icon}</span>}
               </div>
               <h1 className="text-4xl font-bold mb-1">{workspace?.name}</h1>
               <p className="text-sm text-muted-foreground">
-                {pages.length} {pages.length === 1 ? 'page' : 'pages'}
+                {pages.length} {pages.length === 1 ? tc('page') : tc('pages')}
               </p>
             </div>
 
-            {/* Pages List */}
             <div className="space-y-1">
               {pages.length === 0 ? (
                 <div className="py-12 text-center">
-                  <p className="text-muted-foreground mb-6">
-                    No pages yet. Create your first page to get started.
-                  </p>
+                  <p className="text-muted-foreground mb-6">{t('noPagesYet')}</p>
                   <Button onClick={() => setShowCreateDialog(true)}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Create First Page
+                    {t('createFirstPage')}
                   </Button>
                 </div>
               ) : (
@@ -161,13 +155,12 @@ export default function WorkspacePage() {
                     </Link>
                   ))}
 
-                  {/* Quick Add Button */}
                   <button
                     onClick={() => setShowCreateDialog(true)}
                     className="flex items-center gap-2 px-2 py-1.5 -mx-2 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors w-full"
                   >
                     <Plus className="h-4 w-4" />
-                    <span className="text-sm">New page</span>
+                    <span className="text-sm">{t('newPage')}</span>
                   </button>
                 </>
               )}
@@ -176,18 +169,17 @@ export default function WorkspacePage() {
         </div>
       </div>
 
-      {/* Create Page Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Page</DialogTitle>
+            <DialogTitle>{t('createNewPage')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreatePage}>
             <div className="py-4">
               <Input
                 value={newPageTitle}
                 onChange={(e) => setNewPageTitle(e.target.value)}
-                placeholder="Page title"
+                placeholder={t('pageTitle')}
                 autoFocus
               />
             </div>
@@ -195,14 +187,11 @@ export default function WorkspacePage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setShowCreateDialog(false);
-                  setNewPageTitle('');
-                }}
+                onClick={() => { setShowCreateDialog(false); setNewPageTitle(''); }}
               >
-                Cancel
+                {tc('cancel')}
               </Button>
-              <Button type="submit">Create</Button>
+              <Button type="submit">{tc('create')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
