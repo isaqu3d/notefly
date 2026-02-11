@@ -120,10 +120,18 @@ export const createBlockSchema = z.discriminatedUnion('type', [
 ]);
 
 export const updateBlockSchema = z.object({
+  type: z.nativeEnum(BlockType).optional(),
   content: z.string().optional(),
   checked: z.boolean().optional(),
   position: z.number().int().nonnegative().optional(),
   parentId: z.string().uuid().nullable().optional(),
+  url: z.string().url().optional(),
+  caption: z.string().optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  language: z.string().optional(),
+  icon: z.string().optional(),
+  color: z.string().optional(),
 });
 
 // Pagination validators
