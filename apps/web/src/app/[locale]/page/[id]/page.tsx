@@ -235,42 +235,45 @@ export default function PageEditorPage() {
   const handleReorderBlocks = useCallback(
     async (draggedBlockId: string, targetBlockId: string) => {
       try {
-        const draggedBlock = blocks.find((b) => b.id === draggedBlockId);
-        const targetBlock = blocks.find((b) => b.id === targetBlockId);
-
-        if (!draggedBlock || !targetBlock) return;
-
-        // Calculate new position
-        const newPosition = targetBlock.position;
-
-        // Update local state immediately for responsive UI
         setBlocks((prev) => {
+          const draggedBlock = prev.find((b) => b.id === draggedBlockId);
+          if (!draggedBlock) return prev;
+
           const filtered = prev.filter((b) => b.id !== draggedBlockId);
           const targetIndex = filtered.findIndex((b) => b.id === targetBlockId);
+          if (targetIndex === -1) return prev;
+
           const newBlocks = [
             ...filtered.slice(0, targetIndex),
-            { ...draggedBlock, position: newPosition },
+            draggedBlock,
             ...filtered.slice(targetIndex),
           ];
-          // Recalculate positions
-          return newBlocks.map((b, index) => ({ ...b, position: index }));
-        });
 
-        // Update position on server
-        await api.put(`/blocks/${draggedBlockId}`, { position: newPosition });
-        console.log(
-          '[Editor] Block reordered:',
-          draggedBlockId,
-          'to position',
-          newPosition
-        );
+          const reordered = newBlocks.map((b, index) => ({
+            ...b,
+            position: index,
+          }));
+
+          const updates = reordered.filter(
+            (b) => b.position !== prev.find((p) => p.id === b.id)?.position
+          );
+          Promise.all(
+            updates.map((b) =>
+              api.put(`/blocks/${b.id}`, { position: b.position })
+            )
+          ).catch(() => {
+            toast.error('Failed to save block order');
+            loadBlocks();
+          });
+
+          return reordered;
+        });
       } catch (error) {
         console.error('Failed to reorder blocks:', error);
-        // Reload blocks to restore correct order
         loadBlocks();
       }
     },
-    [blocks]
+    []
   );
 
   const handleDragStart = useCallback((blockId: string) => {

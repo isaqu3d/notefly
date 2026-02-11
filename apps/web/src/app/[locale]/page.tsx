@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 
 export default function HomePage() {
   const t = useTranslations('landing');
-  const tc = useTranslations('common');
 
   return (
     <div className="min-h-screen">
