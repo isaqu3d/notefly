@@ -1,4 +1,5 @@
 import type { Block } from '@/types';
+import { cn } from '@/lib/utils';
 import { COMMAND_OPTIONS } from './constants';
 
 interface CommandMenuProps {
@@ -9,8 +10,8 @@ interface CommandMenuProps {
 
 export function CommandMenu({ selectedIndex, onSelect, menuItemRefs }: CommandMenuProps) {
   return (
-    <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-xl shadow-xl z-50 w-72 max-h-72 overflow-auto notion-scrollbar">
-      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-b border-border">
+    <div className="absolute top-full left-0 z-50 mt-1 w-72 max-h-72 overflow-auto rounded-xl border border-border bg-popover shadow-xl notion-scrollbar">
+      <div className="border-b border-border px-2 py-1.5 text-xs font-medium text-muted-foreground">
         Basic blocks
       </div>
       <div className="p-1">
@@ -21,13 +22,14 @@ export function CommandMenu({ selectedIndex, onSelect, menuItemRefs }: CommandMe
               menuItemRefs.current[index] = el;
             }}
             onClick={() => onSelect(option.type)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+            className={cn(
+              'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors',
               index === selectedIndex
                 ? 'bg-accent text-accent-foreground'
-                : 'hover:bg-accent/50'
-            }`}
+                : 'hover:bg-accent/50',
+            )}
           >
-            <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-muted-foreground text-xs font-medium flex-shrink-0">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">
               {option.icon}
             </span>
             <div className="min-w-0">
