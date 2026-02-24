@@ -18,15 +18,20 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string) {
+    console.log('[AuthService] Validating user:', { email });
+
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
+      console.log('[AuthService] User not found');
       return null;
     }
 
+    console.log('[AuthService] User found, checking password...');
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('[AuthService] Password valid:', isPasswordValid);
 
     if (!isPasswordValid) {
       return null;
@@ -71,8 +76,23 @@ export class AuthService {
   }
 
   async login(userId: string, email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        createdAt: true,
+      },
+    });
+
     const tokens = await this.generateTokens(userId, email);
-    return tokens;
+
+    return {
+      user,
+      ...tokens,
+    };
   }
 
   async refresh(refreshToken: string) {
@@ -140,8 +160,8 @@ export class AuthService {
     });
 
     return {
-      accessToken,
-      refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
     };
   }
 }
