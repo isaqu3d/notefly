@@ -164,7 +164,7 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
-  async uploadFile<T>(endpoint: string, file: File): Promise<T> {
+  async uploadFile<T>(endpoint: string, file: File, isRetry = false): Promise<T> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -182,6 +182,14 @@ class ApiClient {
     });
 
     const data = await response.json().catch(() => null);
+
+    // If 401 and not a retry, try to refresh token
+    if (response.status === 401 && !isRetry) {
+      const refreshed = await this.tryRefreshToken();
+      if (refreshed) {
+        return this.uploadFile<T>(endpoint, file, true);
+      }
+    }
 
     if (!response.ok) {
       throw new ApiError(

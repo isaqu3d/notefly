@@ -52,7 +52,7 @@ export type BlockType =
   | 'HEADING_2'
   | 'HEADING_3'
   | 'TODO'
-  | 'BULLETED_LIST'
+  | 'BULLET_LIST'
   | 'NUMBERED_LIST'
   | 'CODE'
   | 'QUOTE'
@@ -65,9 +65,17 @@ export interface Block {
   type: BlockType;
   content: string;
   position: number;
-  parentBlockId: string | null;
+  parentId: string | null;
   pageId: string;
-  properties: Record<string, unknown>;
+  // Flat properties matching backend columns
+  checked: boolean | null;
+  url: string | null;
+  caption: string | null;
+  width: number | null;
+  height: number | null;
+  language: string | null;
+  icon: string | null;
+  color: string | null;
   createdAt: string;
   updatedAt: string;
 }
