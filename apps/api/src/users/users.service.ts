@@ -34,6 +34,7 @@ export class UsersService {
         email: true,
         name: true,
         avatar: true,
+        createdAt: true,
         updatedAt: true,
       },
     });
