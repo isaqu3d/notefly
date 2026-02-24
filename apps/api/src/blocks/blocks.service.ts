@@ -89,6 +89,7 @@ export class BlocksService {
     id: string,
     userId: string,
     data: {
+      type?: BlockType;
       content?: string;
       checked?: boolean;
       position?: number;
